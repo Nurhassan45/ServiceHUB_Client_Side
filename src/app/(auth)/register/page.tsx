@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, type ChangeEvent, type FormEvent } from "react";
@@ -5,11 +6,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import axiosInstance from "../../../lib/axios";
-// import axiosInstance from "@/lib/axios";
 
 type UserRole = "customer" | "technician";
 
-// Fonts load from Google Fonts via the @import line in globals.css.
 const display = "font-['Bricolage_Grotesque',ui-sans-serif,system-ui,sans-serif]";
 const body = "font-['DM_Sans',ui-sans-serif,system-ui,sans-serif]";
 
@@ -28,9 +27,15 @@ const list = {
     hidden: {},
     show: { transition: { staggerChildren: 0.14, delayChildren: 0.35 } },
 };
+
 const drop = {
     hidden: { opacity: 0, y: -28, scale: 0.96 },
-    show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring" as const, stiffness: 160, damping: 16 } },
+    show: {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        transition: { type: "spring" as const, stiffness: 160, damping: 16 },
+    },
 };
 
 export default function RegisterPage() {
@@ -40,6 +45,7 @@ export default function RegisterPage() {
     const [formData, setFormData] = useState({
         name: "",
         email: "",
+        phone: "",
         password: "",
         role: "customer" as UserRole,
     });
@@ -61,20 +67,36 @@ export default function RegisterPage() {
     const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
+        setError("");
+
+        const phoneRegex = /^(\+8801[3-9]\d{8}|01[3-9]\d{8})$/;
+
+        if (!phoneRegex.test(formData.phone.trim())) {
+            setError("Please enter a valid Bangladeshi phone number.");
+            return;
+        }
+
+        if (formData.password.length < 6) {
+            setError("Password must be at least 6 characters long.");
+            return;
+        }
+
         try {
             setLoading(true);
-            setError("");
 
-            await axiosInstance.post("/auth/register", formData);
+            await axiosInstance.post("/auth/register", {
+                ...formData,
+                phone: formData.phone.trim(),
+            });
 
             setSuccess(true);
-            setTimeout(() => router.push("/login"), 1500);
+
+            setTimeout(() => {
+                router.push("/login");
+            }, 1500);
+
         } catch (err: unknown) {
-            if (
-                typeof err === "object" &&
-                err !== null &&
-                "response" in err
-            ) {
+            if (typeof err === "object" && err !== null && "response" in err) {
                 const apiError = err as {
                     response?: {
                         data?: { message?: string };
@@ -97,16 +119,22 @@ export default function RegisterPage() {
         "w-full rounded-xl border border-[#1F3F46] bg-[#0D2227] px-4 py-3.5 text-white " +
         "placeholder:text-slate-500 outline-none transition " +
         "focus:border-[#3DDBC0] focus:ring-4 focus:ring-[#3DDBC0]/15";
+
     const label = "block text-sm font-medium text-slate-300";
 
     return (
         <div className={`${body} grid min-h-screen bg-[#061418] lg:grid-cols-2`}>
+
             {/* Brand panel */}
             <section className="relative hidden flex-col justify-between overflow-hidden bg-[#0A2228] p-14 text-white lg:flex">
+
                 <div className="absolute -right-24 -top-24 h-[28rem] w-[28rem] rounded-full bg-[#3DDBC0]/20 blur-3xl" aria-hidden />
+
                 <div className="absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-[#3DDBC0]/5 blur-3xl" aria-hidden />
 
-                <p className={`${display} relative text-2xl font-bold`}>ServiceHub</p>
+                <p className={`${display} relative text-2xl font-bold`}>
+                    ServiceHub
+                </p>
 
                 <div className="relative">
                     <motion.h2
@@ -125,10 +153,19 @@ export default function RegisterPage() {
                         className="mt-12 max-w-sm space-y-4"
                     >
                         {tickets.map((t, i) => (
-                            <motion.li key={t.job} variants={drop} className={t.shift} style={{ rotate: t.tilt }}>
+                            <motion.li
+                                key={t.job}
+                                variants={drop}
+                                className={t.shift}
+                                style={{ rotate: t.tilt }}
+                            >
                                 <motion.div
                                     animate={reduce ? undefined : { y: [0, -6, 0] }}
-                                    transition={{ duration: 5 + i, repeat: Infinity, ease: "easeInOut" }}
+                                    transition={{
+                                        duration: 5 + i,
+                                        repeat: Infinity,
+                                        ease: "easeInOut",
+                                    }}
                                     className="rounded-2xl border border-white/10 bg-[#102E35] p-4 text-white shadow-xl shadow-black/40"
                                 >
                                     <div className="flex items-start justify-between gap-4">
@@ -136,11 +173,13 @@ export default function RegisterPage() {
                                             <p className="font-semibold">{t.job}</p>
                                             <p className="text-sm text-slate-400">{t.who}</p>
                                         </div>
+
                                         <span className="flex shrink-0 items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium">
                                             <span className={`h-2 w-2 rounded-full ${t.dot}`} />
                                             {t.status}
                                         </span>
                                     </div>
+
                                     <p className="mt-3 text-sm text-slate-400">{t.when}</p>
                                 </motion.div>
                             </motion.li>
@@ -148,11 +187,14 @@ export default function RegisterPage() {
                     </motion.ul>
                 </div>
 
-                <p className="relative text-sm text-white/60">Free to join. Pick your role and start in a minute.</p>
+                <p className="relative text-sm text-white/60">
+                    Free to join. Pick your role and start in a minute.
+                </p>
             </section>
 
-            {/* Form panel */}
+            {/* Registration form */}
             <main className="flex items-center justify-center px-6 py-12">
+
                 <motion.form
                     onSubmit={handleRegister}
                     initial={reduce ? false : { opacity: 0, x: 24 }}
@@ -161,18 +203,31 @@ export default function RegisterPage() {
                     className="w-full max-w-sm space-y-6"
                 >
                     <div>
-                        <p className={`${display} mb-6 text-xl font-bold text-[#3DDBC0] lg:hidden`}>ServiceHub</p>
-                        <h1 className={`${display} text-4xl font-bold text-white`}>Create your account</h1>
-                        <p className="mt-2 text-slate-400">Tell us who you are to get started.</p>
+                        <p className={`${display} mb-6 text-xl font-bold text-[#3DDBC0] lg:hidden`}>
+                            ServiceHub
+                        </p>
+
+                        <h1 className={`${display} text-4xl font-bold text-white`}>
+                            Create your account
+                        </h1>
+
+                        <p className="mt-2 text-slate-400">
+                            Tell us who you are to get started.
+                        </p>
                     </div>
 
+                    {/* Messages */}
                     <AnimatePresence mode="wait">
                         {error && (
                             <motion.p
                                 key={error}
                                 role="alert"
                                 initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: "auto", x: reduce ? 0 : [0, -8, 8, -5, 5, 0] }}
+                                animate={{
+                                    opacity: 1,
+                                    height: "auto",
+                                    x: reduce ? 0 : [0, -8, 8, -5, 5, 0],
+                                }}
                                 exit={{ opacity: 0, height: 0 }}
                                 transition={{ duration: 0.4 }}
                                 className="overflow-hidden rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
@@ -180,6 +235,7 @@ export default function RegisterPage() {
                                 {error}
                             </motion.p>
                         )}
+
                         {success && (
                             <motion.p
                                 key="success"
@@ -196,28 +252,48 @@ export default function RegisterPage() {
                     {/* Role picker */}
                     <fieldset className="space-y-2">
                         <legend className={`${label} mb-2`}>I am a</legend>
-                        <div role="radiogroup" className="grid grid-cols-2 gap-1 rounded-2xl border border-[#1F3F46] bg-[#0D2227] p-1">
+
+                        <div
+                            role="radiogroup"
+                            className="grid grid-cols-2 gap-1 rounded-2xl border border-[#1F3F46] bg-[#0D2227] p-1"
+                        >
                             {roles.map((r) => {
                                 const active = formData.role === r.value;
+
                                 return (
                                     <button
                                         key={r.value}
                                         type="button"
                                         role="radio"
                                         aria-checked={active}
-                                        onClick={() => setFormData((p) => ({ ...p, role: r.value }))}
+                                        onClick={() =>
+                                            setFormData((p) => ({
+                                                ...p,
+                                                role: r.value,
+                                            }))
+                                        }
                                         className="relative rounded-xl px-3 py-2.5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#3DDBC0]"
                                     >
                                         {active && (
                                             <motion.span
                                                 layoutId="role-pill"
-                                                transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 30 }}
+                                                transition={
+                                                    reduce
+                                                        ? { duration: 0 }
+                                                        : {
+                                                            type: "spring",
+                                                            stiffness: 380,
+                                                            damping: 30,
+                                                        }
+                                                }
                                                 className="absolute inset-0 rounded-xl bg-[#3DDBC0]"
                                             />
                                         )}
+
                                         <span className={`relative block text-sm font-semibold ${active ? "text-[#04181C]" : "text-white"}`}>
                                             {r.title}
                                         </span>
+
                                         <span className={`relative block text-xs ${active ? "text-[#04181C]/70" : "text-slate-400"}`}>
                                             {r.hint}
                                         </span>
@@ -227,8 +303,12 @@ export default function RegisterPage() {
                         </div>
                     </fieldset>
 
+                    {/* Full name */}
                     <div className="space-y-2">
-                        <label htmlFor="name" className={label}>Full name</label>
+                        <label htmlFor="name" className={label}>
+                            Full name
+                        </label>
+
                         <input
                             id="name"
                             name="name"
@@ -241,8 +321,12 @@ export default function RegisterPage() {
                         />
                     </div>
 
+                    {/* Email */}
                     <div className="space-y-2">
-                        <label htmlFor="email" className={label}>Email</label>
+                        <label htmlFor="email" className={label}>
+                            Email
+                        </label>
+
                         <input
                             id="email"
                             type="email"
@@ -256,8 +340,37 @@ export default function RegisterPage() {
                         />
                     </div>
 
+                    {/* Phone number */}
                     <div className="space-y-2">
-                        <label htmlFor="password" className={label}>Password</label>
+                        <label htmlFor="phone" className={label}>
+                            Phone Number
+                        </label>
+
+                        <input
+                            id="phone"
+                            type="tel"
+                            name="phone"
+                            autoComplete="tel"
+                            value={formData.phone}
+                            onChange={handleChange}
+                            placeholder="+8801XXXXXXXXX"
+                            pattern="(\+8801[3-9]\d{8}|01[3-9]\d{8})"
+                            title="Enter a valid Bangladeshi mobile number"
+                            className={field}
+                            required
+                        />
+
+                        <p className="text-xs text-slate-500">
+                            Example: 01712345678 or +8801712345678
+                        </p>
+                    </div>
+
+                    {/* Password */}
+                    <div className="space-y-2">
+                        <label htmlFor="password" className={label}>
+                            Password
+                        </label>
+
                         <div className="relative">
                             <input
                                 id="password"
@@ -268,8 +381,10 @@ export default function RegisterPage() {
                                 onChange={handleChange}
                                 placeholder="Create a password"
                                 className={`${field} pr-16`}
+                                minLength={6}
                                 required
                             />
+
                             <button
                                 type="button"
                                 onClick={() => setShowPassword((s) => !s)}
@@ -281,6 +396,7 @@ export default function RegisterPage() {
                         </div>
                     </div>
 
+                    {/* Submit */}
                     <motion.button
                         type="submit"
                         disabled={loading || success}
@@ -293,15 +409,23 @@ export default function RegisterPage() {
                                 aria-hidden
                                 className="h-4 w-4 rounded-full border-2 border-[#04181C]/30 border-t-[#04181C]"
                                 animate={{ rotate: 360 }}
-                                transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                                transition={{
+                                    duration: 0.8,
+                                    repeat: Infinity,
+                                    ease: "linear",
+                                }}
                             />
                         )}
+
                         {loading ? "Creating account" : "Create account"}
                     </motion.button>
 
                     <p className="text-center text-sm text-slate-400">
                         Already have an account?{" "}
-                        <Link href="/login" className="font-medium text-[#3DDBC0] hover:underline">
+                        <Link
+                            href="/login"
+                            className="font-medium text-[#3DDBC0] hover:underline"
+                        >
                             Log in
                         </Link>
                     </p>

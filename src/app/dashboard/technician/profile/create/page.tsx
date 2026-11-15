@@ -47,7 +47,7 @@ export default function CreateTechnicianProfile() {
       );
 
       setTimeout(() => {
-        router.push("/dashboard/technician");
+        router.push("/dashboard/technician/profile");
       }, 1800);
     } catch (err: any) {
       setError(
