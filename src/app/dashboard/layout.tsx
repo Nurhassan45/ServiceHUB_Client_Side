@@ -24,6 +24,8 @@ const navigation: Record<string, NavItem[]> = {
     technician: [
         { label: "Assigned Bookings", href: "/dashboard/assigned-bookings", icon: "▤" },
         { label: "My Profile", href: "/dashboard/technician/profile", icon: "♙" },
+        { label: "Create Technician Profile", href: "/dashboard/technician/profile/create", icon: "♙" },
+
     ],
 
     admin: [
