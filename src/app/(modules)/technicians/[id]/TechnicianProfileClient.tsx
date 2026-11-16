@@ -276,12 +276,7 @@ export default function TechnicianProfilePage() {
                             </p>
                         </section>
                         
-<Link
-    href={`/services?technicianId=${technician.id}`}
-    className="inline-flex items-center justify-center rounded-xl bg-[#3DDBC0] px-6 py-3 font-bold text-[#04181C] transition hover:bg-[#6AEAD3]"
->
-    Book This Technician →
-</Link>
+
 
                         {/* Reviews */}
                         <section className="mt-12">
